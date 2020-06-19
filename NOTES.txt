@@ -2,7 +2,8 @@ To compile:
 go to the directory of the program.
 open a terminal in that directrory.
 execute: "make all" from terminal.
-This program generates a k-d tree associated with a given set of points and searches the tree for the nearest neighbors of a set of query points. The user must specify the dimensionality of the points, their number, the number of query points, the number of times the k-d tree must be generated (optional, used for performance mesurments) and the Minkowski metric used, in the header file "basic_def.h". The points to be inserted in the tree must be stored in a file following the format:
+This program generates a k-d tree associated with a given set of points and searches the
+tree for the nearest neighbors of a set of query points. The user must specify the dimensionality of the points, their number, the number of query points, the number of times the k-d tree must be generated (optional, used for performance mesurments) and the Minkowski metric used in the header file "basic_def.h". The points to be inserted in the tree must be stored in a file following the format:
 point1_val1 point1_val2 ... point1_valK
 point2_val1 point2_val2 ... point2_valK
 .
@@ -15,12 +16,12 @@ k_d_solver input_points query_points > output
 The program has 3 options (which must be specified before the filenames):
 -e which specifies the use of the heurisric method
 -m which specifies the absence of the ball within bounds test
--t which specifies the test environment i.e. use of all the algorithms and their metrics
+-t which specifies the use of all the algorithms
 So 4 additional calls can be used:
 k_d_solver -m input_points query_points > output
 k_d_solver -e -m input_points query_points > output
 k_d_solver -e input_points query_points > output
 k_d_solver -t input_points query_points > output
-Example of use:
-./k_d_solver -t DATASET_TEST.txt QUERY_TEST.txt > OUTPUT_TEST.txt
 
+Example of use:
+./k_d_solver -t DATASET_TESTtxt QUERY_TEST.txt

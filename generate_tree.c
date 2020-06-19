@@ -73,7 +73,7 @@ static node_t* gen_node(int d, const point_t *pto, const node_t *l_son, const no
 }
 
 //This function scans the entire dataset and since it is called at each level of the
-//k-d tree the overall time complexity is O(PTS_Nlog(PTS_N)). IS THERE A BETTER WAY?
+//k-d tree the overall time complexity is O(Nlog(N)). IS THERE A BETTER WAY?
 static float var_nodes(int d, const point_t* pts[])
 {
 	double sq_sum = 0;
@@ -118,9 +118,9 @@ static int partition(const point_t* pts[], int d, int beginning, int end, int in
 	return p_ind;
 }
 
-//This algorithm has expected complexity O(PTS_N) (so it does not affect the 
+//This algorithm has expected complexity O(N) (so it does not affect the 
 //performace of the algorithm which remains polylogarithmic), but worst case complexity is 
-//O(PTS_N^2).
+//O(N^2).
 static point_t* quick_select(const point_t* pts[], int d, int beginning, int end, int med_index)
 {
 	if (beginning == end)
@@ -150,27 +150,22 @@ static point_t* median_point(int d, const point_t* pts[])
 }
 
 //This function scans the entire dataset and since it is called at each level of the
-//k-d tree the overall time complexity is O(PTS_Nlog(PTS_N)). IS THERE A BETTER WAY?
+//k-d tree the overall time complexity is O(Nlog(N)). IS THERE A BETTER WAY?
 static void sub_tree_find(const point_t* l_pts[], const point_t* r_pts[], const point_t* pts[], int d, const point_t* med)
 {
 	int i, j;
 	i = j = 0;
-	for (int h = 0; h < PTS_N; ++h)
+	for (int h = 0; h < PTS_N; h++)
 	{
 		if (med == pts[h])
 			continue;
 		if (pts[h] == NULL)
-			break;
+			return;
+
 		if((med -> keys[d]) >= (pts[h] -> keys[d]))
-		{
-			l_pts[i] = pts[h];
-			i++;
-		}
+			l_pts[i++] = pts[h];
 		else
-		{
-			r_pts[j] = pts[h];
-			j++;
-		}
+			r_pts[j++] = pts[h];
 	}
 }
 
@@ -179,15 +174,6 @@ node_t* build_tree(const point_t* pts[])
 	//DBG
 	//printf("NEW INSTANCE OF BUILD_TREE\n");
 
-	int disc = -1;
-	float temp_var = 0.0f;
-	const point_t *med = NULL;
-	const point_t *l_pts[PTS_N], *r_pts[PTS_N];
-	for (int i = 0; i < PTS_N; ++i){l_pts[i] = r_pts[i] = NULL;}
-
-	//DBG
-	//printf("INITIALIZATION OF BUILD_TREE SUCCESSFUL\n");
-
 	int num_pts;
 	for (num_pts = 0; num_pts < PTS_N; num_pts++)
 		if (pts[num_pts] == NULL)
@@ -195,6 +181,18 @@ node_t* build_tree(const point_t* pts[])
 
 	//DBG
 	//printf("COUNT BUILD_TREE SUCCESSFUL WITH RESULT %d\n", num_pts);
+	//printf("FOUND POINTS IN BUILD_TREE:\n");
+	//for (int i = 0; i < PTS_N; ++i)
+	//{
+	//	if (pts[i] == NULL)
+	//		break;
+	//	printf("POINT #%d:", i);
+	//	for (int j = 0; j < DIM_K; ++j)
+	//	{
+	//		printf(" %f", pts[i] -> keys[j]);
+	//	}
+	//	printf("\n");
+	//}
 
 	if (num_pts == 0)
 	{
@@ -216,19 +214,14 @@ node_t* build_tree(const point_t* pts[])
 		return leaf_node(pts);
 	}
 
+	int disc = -1;
+	float temp_var = 0.0f;
+	const point_t *med = NULL;
+	const point_t *l_pts[num_pts], *r_pts[num_pts];
+	for (int i = 0; i < num_pts; ++i){l_pts[i] = r_pts[i] = NULL;}
+
 	//DBG
-	//printf("FOUND POINTS IN BUILD_TREE:\n");
-	//for (int i = 0; i < PTS_N; ++i)
-	//{
-	//	if (pts[i] == NULL)
-	//		break;
-	//	printf("POINT #%d:", i);
-	//	for (int j = 0; j < DIM_K; ++j)
-	//	{
-	//		printf(" %f", pts[i] -> keys[j]);
-	//	}
-	//	printf("\n");
-	//}
+	//printf("INITIALIZATION OF BUILD_TREE SUCCESSFUL\n");
 
 	float max_var = -1.0f;
 	for (int i = 0; i < DIM_K; ++i)
@@ -242,10 +235,18 @@ node_t* build_tree(const point_t* pts[])
 		//printf("CALCULATED VARIANCE: %f AT INDEX %d\n", temp_var, i);
 	}
 
+	//MEASURE PERFORMANCE WITHOUT THE CALCULATION OF VARIANCE
+	//static int disc_tracker = 0;
+	//disc = disc_tracker;
+	//disc_tracker = (disc_tracker+1)%DIM_K;
+
 	//DBG
 	//printf("FOUND DISC: %d\n", disc);
 
 	med = median_point(disc, pts);
+
+	//MEASURE PERFORMANCE WITHOUT THE CALCULATION OF MEDIAN
+	//med = pts[0];
 
 	//DBG
 	//printf("FOUND MEDIAN:");
@@ -275,6 +276,7 @@ node_t* build_tree(const point_t* pts[])
 	//		printf("%f ", r_pts[i] -> keys[j]);
 	//	printf("\n");
 	//}
+	//printf("GENERATING NEW NODE\n");
 
 	return gen_node(disc, med, build_tree(l_pts), build_tree(r_pts));
 }

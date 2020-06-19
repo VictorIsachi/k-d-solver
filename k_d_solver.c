@@ -10,6 +10,13 @@ float min_dist;//global variable that keep track of the distrance from the neare
 const point_t* near_neighbor;//global variable that keeps track of the closest point found
 bool flag_done;//global variable that keeps track of the state of search
 
+//USED FOR PERFORMANCE MEASUREMENTS OF THE SEARCH ALGORITHMS
+double time_tracker_st = 0;
+double time_tracker_st_m = 0;
+double time_tracker_eu = 0;
+double time_tracker_eu_m = 0;
+double time_tracker_lin = 0;
+
 void search_alg(bool f_eu, bool f_bwb, const node_t* node)
 {
 	if (f_eu && f_bwb)
@@ -93,6 +100,16 @@ void search_proc(bool f_eu, bool f_bwb, clock_t start, clock_t end, node_t* root
 	for (int j = 0; j < DIM_K; ++j)
 		printf(" %f", near_neighbor -> keys[j]);
 	printf("\n");
+
+	//FOR PERFORMANCE MEASUREMENTS
+	if (!f_eu && !f_bwb)
+		time_tracker_st += time_passed(start, end);
+	else if (!f_eu && f_bwb)
+		time_tracker_st_m += time_passed(start, end);
+	else if (f_eu && !f_bwb)
+		time_tracker_eu += time_passed(start, end);
+	else
+		time_tracker_eu_m += time_passed(start, end);
 }
 
 int main(int argc, char *argv[])
@@ -173,7 +190,6 @@ int main(int argc, char *argv[])
 
 	fclose(points_file);
 	fclose(query_file);
-
 	
 	//CHECK IF THE FILES HAVE BEEN READ CORRECTLY
 	//printf("Read points:\n");
@@ -192,13 +208,13 @@ int main(int argc, char *argv[])
 	//	printf("\n");
 	//}
 	
-
 	const point_t* p_points[PTS_N];
 		for (int i = 0; i < PTS_N; ++i)
 			p_points[i] = &points[i];
 	printf("Generated list of pointers to the points\n");
 
 	node_t* root;
+	double avg_time = 0;
 	for (int i = 0; i < BUILD_REP; ++i)
 	{
 		printf("build_tree iteration #%d\n", i+1);
@@ -209,7 +225,9 @@ int main(int argc, char *argv[])
 		printf("Built the k-d tree\n");
 		//printf("Stoped the clock\n");
 		printf("Tree generated in %f seconds\n", time_passed(start, end));
+		avg_time += time_passed(start, end);
 	}
+	printf("Average time over %d iterations: %f\n", BUILD_REP, ((double)1/BUILD_REP)*avg_time);
 	
 	//CHECK IF THE TREE HAS BEEN GENERATED CORRECTLY
 	//printf("Printing the k-d tree\n");
@@ -242,7 +260,18 @@ int main(int argc, char *argv[])
 		for (int j = 0; j < DIM_K; ++j)
 			printf(" %f", near_neighbor -> keys[j]);
 		printf("\n");
+
+		//FOR PERFORMANCE MEASUREMENTS
+		time_tracker_lin += time_passed(start, end);
 	}
+
+	//FOR PERFORMANCE MEASUREMENTS
+	printf("Average time performance of the algorithms over %d query points:\n", PTS_Q);
+	printf("search_tree: %f\n", ((double)1/PTS_Q)*time_tracker_st);
+	printf("search_tree_m: %f\n", ((double)1/PTS_Q)*time_tracker_st_m);
+	printf("search_tree_eu: %f\n", ((double)1/PTS_Q)*time_tracker_eu);
+	printf("search_tree_eu_m: %f\n", ((double)1/PTS_Q)*time_tracker_eu_m);
+	printf("linear_search: %f\n", ((double)1/PTS_Q)*time_tracker_lin);
 
 	free_tree(root);
 	root = NULL;
